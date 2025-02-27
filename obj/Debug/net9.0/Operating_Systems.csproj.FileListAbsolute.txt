@@ -1,0 +1,14 @@
+/home/Jonathan/Desktop/Operating_Systems/bin/Debug/net9.0/Operating_Systems
+/home/Jonathan/Desktop/Operating_Systems/bin/Debug/net9.0/Operating_Systems.deps.json
+/home/Jonathan/Desktop/Operating_Systems/bin/Debug/net9.0/Operating_Systems.runtimeconfig.json
+/home/Jonathan/Desktop/Operating_Systems/bin/Debug/net9.0/Operating_Systems.dll
+/home/Jonathan/Desktop/Operating_Systems/bin/Debug/net9.0/Operating_Systems.pdb
+/home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/Operating_Systems.GeneratedMSBuildEditorConfig.editorconfig
+/home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/Operating_Systems.AssemblyInfoInputs.cache
+/home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/Operating_Systems.AssemblyInfo.cs
+/home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/Operating_Systems.csproj.CoreCompileInputs.cache
+/home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/Operating_Systems.dll
+/home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/refint/Operating_Systems.dll
+/home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/Operating_Systems.pdb
+/home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/Operating_Systems.genruntimeconfig.cache
+/home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/ref/Operating_Systems.dll
