@@ -12,3 +12,4 @@
 /home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/Operating_Systems.pdb
 /home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/Operating_Systems.genruntimeconfig.cache
 /home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/ref/Operating_Systems.dll
+/home/Jonathan/Desktop/Operating_Systems/obj/Debug/net9.0/Operating_Systems.sourcelink.json

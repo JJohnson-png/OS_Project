@@ -1,379 +1,253 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿//NAME: JONATHAN JOHNSON
+//CLASS: OPERATING SYSTEMS
+//SECTION: 01
+//DATE: 2/27/2025
+
+
+using System;
 using System.Threading;
 
-class BankAccount                   //BANK ACCOUNT CLASS
+class BankAccount
 {
-    private int balance = 1000;         //EACH ACCOUNT STARTS WITH 100 DOLLARS
-    private Mutex mutex = new Mutex();
+    private int balance = 1000;     //EACH ACCOUNT STARTS WITH 1000 DOLLARS
+    private Mutex mutex = new Mutex();      //MUTEX FOR EACH ACCOUNT OBJECT
 
-    public int getBalance(){            //CONSTRUCTOR
-        return balance;
-    }
+    public int GetBalance() => balance;     //GETTER FOR BALANCE
 
-    public void Deposit(int amount)             //METHOD FOR DEPOSITING MONEY
+    public void Deposit(int amount)     //DEPOSIT METHOD
     {
-        mutex.WaitOne();                  //LOCKS ACCOUNT      
+        mutex.WaitOne();        //LOCKS THE ACCOUNT
         try
         {
-            balance += amount;  
-            Console.WriteLine($"Deposited {amount}, New Balance: {balance}");       //DEPOSITS IF NOT LOCKED
+            balance += amount;
+            Console.WriteLine($"Deposited {amount}, New Balance: {balance}");       //ADDS TO AMOUNT TO ACCOUNT AND PRINTS
         }
         finally
         {
-            mutex.ReleaseMutex();       //RELEASES
+            mutex.ReleaseMutex();       //RELEASES ACCOUNT 
         }
     }
 
-    public void Withdraw(int amount)                //METHOD TO WITHDRAW MONEY
+    public void Withdraw(int amount)        //METHOD FOR WITHDRAW
     {
-        mutex.WaitOne();                            //LOCKS ACCOUNT
+        mutex.WaitOne();        //LOCKS ACCOUNT OBJECT
         try
-        {
-            if (balance >= amount)          //PREVENTS NEGATIVE ACCOUNT BALANCE
-            {
-                balance -= amount;  
-                Console.WriteLine($"Withdrew {amount}, New Balance: {balance}");        //TAKES AWAY FROM ACCOUNT
-            }
-            else
-            {
-                Console.WriteLine("Insufficient funds!");
-            }
-        }
-        finally
-        {
-            mutex.ReleaseMutex();       //RELEASES ACCOUNT
-        }
-    }
-
-public void TransferDeadlock(BankAccount target, int amount)    //METHOD FOR INTENTIONAL DEADLOCK      
-{
-    
-    mutex.WaitOne();            //LOCKS ACCOUNT
-    try
-    {
-        Thread.Sleep(3000);         //DELAYS FOR BETER CHANCE AT DEADLOCK
-
-        target.mutex.WaitOne();         //LOCKS OTHER ACCOUNT
-        try
-        {
-            if (balance >= amount)              //PREVENTS NEGATIVE BALANCE
-            {
-                balance -= amount;
-                target.balance += amount;                                   //COMPLETES TRANSACTION
-                Console.WriteLine($"Transferred {amount} successfully.");
-            }
-            else
-            {
-                Console.WriteLine("Insufficient funds!");
-            }
-        }
-        finally
-        {
-            target.mutex.ReleaseMutex();            //REALESES ACCOUNT
-        }
-    }
-    finally
-    {
-        mutex.ReleaseMutex();           //RELEASES ACCOUNT
-    }
-}
-
-public bool TransferDeadlockDetection(BankAccount target, int amount)       //TRANSFER METHOD WITH DEADLOCK DETECTION
-{
-  
-    if (!mutex.WaitOne(1000))       //WAITS FOR SECOND FOR THE ACCOUNT OBJECT TO RELEASE
-    {
-        Console.WriteLine("Failed to acquire first lock. Potential deadlock detected.");
-        return false;
-    }
-    
-    try
-    {
-        Thread.Sleep(300);                  //FOR INCREASED DEADLOCK ODDS
-    
-        if (!target.mutex.WaitOne(1000))        //WAITS FOR SECOND FOR THE ACCOUNT OBJECT TO RELEASE 
-        {
-            Console.WriteLine("Failed to acquire second lock. Potential deadlock detected.");
-            return false;
-        }
-        
-        try
-        {
-            if (balance >= amount)          //PREVENTS NEGATIVE BALANCE
-            {
-                balance -= amount;
-                target.balance += amount;                                   //COMPLETES TRANSACTION
-                Console.WriteLine($"Transferred {amount} successfully.");
-                return true;
-            }
-            else
-            {
-                Console.WriteLine("Insufficient funds!");
-                return false;
-            }
-        }
-        finally
-        {
-            target.mutex.ReleaseMutex();            //RELEASES ACCOUNT
-        }
-    }
-    finally
-    {
-        mutex.ReleaseMutex();                   //RELEASES ACCOUNT
-    }
-}
-
-public void TransferOrdering(BankAccount target, int amount)            //DEMONSTRATES RESOURCE ORDERING
-{
-    BankAccount first;          //VARS FOR FIRST AND SECOND ACCOUNTS
-    BankAccount second;
-
-    if (this.GetHashCode() < target.GetHashCode())          //DETERMINES WHICH COMES FIRST
-    {
-        first = this;
-        second = target;
-    }
-    else
-    {
-        first = target;
-        second = this;
-    }
-
-    lock (first)                //LOCKS FIRST OBJECT
-    {
-        lock (second)           //LOCKS SECOND OBJECT
         {
             if (balance >= amount)      //PREVENTS BALANCE FROM BEING NEGATIVE
             {
-                balance -= amount;
-                target.balance += amount;               //COMPLETES THE TRANSACTION
-                Console.WriteLine($"Transferred {amount} successfully.");
+                balance -= amount;      //SUBTRACTS AMOUNT FROM BALANCE
+                Console.WriteLine($"Withdrew {amount}, New Balance: {balance}");        //PRINTS NEW BALANCE
             }
             else
             {
                 Console.WriteLine("Insufficient funds!");
             }
         }
+        finally
+        {
+            mutex.ReleaseMutex();       //RELEASES ACCOUNT OBJECTS
+        }
     }
-}
 
-public bool TransferWithOrderingAndDetection(BankAccount target, int amount)        //COMBINES PREVIOUS TWO METHODS
+    //***FOR DEMO ONLY***//
+    public void TransferDeadlock(BankAccount target, int amount)        //METHOD FOR SHOWCASING DEADLOCK SCENARIO
+    {
+        mutex.WaitOne();        //LOCKS ACCOUNT OBJECT
+        Console.WriteLine("Waiting...");
+        try
+        {
+            Thread.Sleep(3000);     //PAUSE FOR GUARANTEED DEADLOCK
+            target.mutex.WaitOne();     //WAITS FOR OTHER ACCOUNT TO BE UNLOCKED
+            try
+            {
+                if (balance >= amount)      //REST OF THE METHOD IS REDUNDANT
+                {
+                    balance -= amount;
+                    target.balance += amount;
+                    Console.WriteLine($"Transferred {amount} successfully.");
+                }
+                else
+                {
+                    Console.WriteLine("Insufficient funds!");
+                }
+            }
+            finally
+            {
+                target.mutex.ReleaseMutex();
+            }
+        }
+        finally
+        {
+            mutex.ReleaseMutex();
+        }
+    }
+
+    //***FOR DEMO ONLY***//
+    public void TransferDeadlockDetection(BankAccount target, int amount)   //SHOWCASES ISOLATED DEADLOCK DETECTION     
 {
-    BankAccount first;
-    BankAccount second;
-
-    if (this.GetHashCode() < target.GetHashCode())
+    if (!mutex.WaitOne(1000))       //WAITS ONLY ONE SECOND FOR FREE ACCOUNT
     {
-        first = this;
-        second = target;                                //THIS SECTION DETERMINES WHICH ACCOUNT COMES FIRST AND SECOND
-    }
-    else
-    {
-        first = target;
-        second = this;
-    }
-
-    if (!first.mutex.WaitOne(1000))             //THIS SECTION USES THE ORDER TO COMPLETE TRANSACTION WITH DEADLOCK DETECTION THE SAME AS THE OTHER METHOD
-    {
-        Console.WriteLine("Failed to acquire first lock. Potential deadlock detected.");
-        return false;
+        Console.WriteLine("Potential deadlock detected.");
+        return;     //ESCAPES IF DEADLOCK
     }
 
     try
     {
-        if (!second.mutex.WaitOne(1000))
+        Thread.Sleep(3000);     //PAUSE FOR GURANTEED DEADLOCK
+
+        if (!target.mutex.WaitOne(1000))        //WAITS A SECOND FOR FREE ACCOUNT
         {
-            Console.WriteLine("Failed to acquire second lock. Potential deadlock detected.");
-            return false;
+            Console.WriteLine($"Potential deadlock detected. Voiding transfer of {amount}");
+            return;     //ESCAPES IF DEADLOCK ... REST OF METHOD REDUNDANT
         }
 
-        try
+        try     
         {
             if (balance >= amount)
             {
                 balance -= amount;
                 target.balance += amount;
                 Console.WriteLine($"Transferred {amount} successfully.");
-                return true;
             }
             else
             {
                 Console.WriteLine("Insufficient funds!");
-                return false;
             }
         }
         finally
         {
-            second.mutex.ReleaseMutex();
+            target.mutex.ReleaseMutex();
         }
     }
     finally
     {
-        first.mutex.ReleaseMutex();
+        mutex.ReleaseMutex();
     }
 }
+
+
+    public void TransferWithOrderingAndDetection(BankAccount target, int amount)
+{
+        BankAccount first = this;       //ORDERS ACCOUNT OBJECTS
+        BankAccount second = target;
+
+
+    if (!first.mutex.WaitOne(1000))     //WAITS ONE SECOND FOR ACCOUNT OBJECCT
+    {
+        Console.WriteLine("Failed to acquire first lock. Potential deadlock detected.");
+        return;     //ESCAPES IF DEADLOCK
+    }
+
+    try
+    {
+        if (!second.mutex.WaitOne(1000))        //WAITS ONE SECOND FOR ACCOUNT OBJECT
+        {
+            Console.WriteLine("Failed to acquire second lock. Potential deadlock detected.");
+            return;         //ESCAPES IF DEADLOCK
+        }
+
+        try
+        {
+            if (balance >= amount)      //PREVENTS NEGATIVE ACCOUNT BALANCE
+            {
+                balance -= amount;
+                target.balance += amount;       //ADDS AND SUBTRACTS AMOUNT FROM BALANCES AND PRINTS
+                Console.WriteLine($"Transferred {amount} successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Insufficient funds!");
+            }
+        }
+        finally
+        {
+            second.mutex.ReleaseMutex();        //RELEASES ACCOUNT
+        }
+    }
+    finally
+    {
+        first.mutex.ReleaseMutex();     //RELEASES ACCOUNT
+    }
 }
 
 class Program
 {
     static void Main()
     {
-        Console.WriteLine("Welcome to the Bank of Operating Systems!");
-        bool option = true;
-        BankAccount account1 = new BankAccount();           //CREATES BANK ACCOUNT OBJECTS
+        Console.WriteLine("Welcome to the bank of Operating Systems");
+
+        BankAccount account1 = new BankAccount();       //CREATES ACCOUNT OBJECTS
         BankAccount account2 = new BankAccount();
-        
-        do{                                                         //LOOP FOR MENU
-            Console.WriteLine("Please select an option...\n");
-            Console.WriteLine("1. Deposit");
-            Console.WriteLine("2. Withdraw");
-            Console.WriteLine("3. Deadlock Demonstration");
-            Console.WriteLine("4. Deadlock Transfer detection/fixes");
-            Console.WriteLine("5. Resource Ordering Demonstration");
-            Console.WriteLine("6. Resource Ordering + Deadlock Transfer Detection/Fixes");
-            Console.WriteLine("7. Quit");
 
-            int selection = int.Parse(Console.ReadLine());      //GETS USER CHOICE
-
-            switch(selection){          //SWITCH COMPLETES USER REQUEST AND CALL SCORRESPONDING METHOD
-                case 1: 
-                Console.WriteLine("How much would you like deposit? ");
-                deposit(account1, int.Parse(Console.ReadLine()));
-                break;
-
-                case 2: 
-                Console.WriteLine("How much would you like withdraw? ");
-                withdraw(account1, int.Parse(Console.ReadLine()));
-                break;
-
-                case 3:
-                mutexLocker(account1, account2, 200, 100);  
-                break;
-
-                case 4: 
-                Console.WriteLine("How much would you like to transfer from your account? ");
-                int fromYou = int.Parse(Console.ReadLine());
-                Console.WriteLine("How much would you like to transfer to your account? ");
-                int toYou = int.Parse(Console.ReadLine());
-                mutexLockerDetection(account1, account2, fromYou, toYou);     
-                break;
-                
-                case 5: 
-                Console.WriteLine("How much would you like to transfer from your account? ");
-                fromYou = int.Parse(Console.ReadLine());
-                Console.WriteLine("How much would you like to transfer to your account? ");
-                toYou = int.Parse(Console.ReadLine());
-                transferOrdering(account1, account2, fromYou, toYou);  
-                break;
-
-                case 6 : 
-                Console.WriteLine("How much would you like to transfer from your account? ");
-                fromYou = int.Parse(Console.ReadLine());
-                Console.WriteLine("How much would you like to transfer to your account? ");
-                toYou = int.Parse(Console.ReadLine());
-                TransferWithOrderingAndDetection(account1, account2, fromYou, toYou);  
-                break;
-
-                default:
-                option = false;
-                break;
-            }
-
-        }while(option);
-
-        Console.WriteLine("Transactions completed.");
-    }
-
-    public static void deposit(BankAccount accountA, int depositAmount){        //CALLS DEPOSIT METHOD IN BANK ACCOUNT CLASS
-
-        Thread t1 = new Thread(() => accountA.Deposit(depositAmount));  //CREATES THREAD FOR DEPOSIT
-
-        t1.Start();
-    
-        Console.WriteLine("Waiting...");
-
-        t1.Join();
-
-    }
-
-    public static void withdraw(BankAccount accountA, int withdrawAmount){      //CALLS WITHDRAW METHOD IN BANK ACCOUNT CLASS
-
-        Thread t1 = new Thread(() => accountA.Withdraw(withdrawAmount));        //CREATES THREAD FOR WITHDRAW
-
-        t1.Start();
-    
-        Console.WriteLine("Waiting...");
-
-        t1.Join();
-
-    }
-
-public static void mutexLocker(BankAccount accountA, BankAccount accountB, int amountA, int amountB)        //CALLS FOR MUTEX DEADLOCK METHOD IN BANK ACCOUNT CLASS
-{
-    Thread t1 = new Thread(() => accountA.TransferDeadlock(accountB, amountA));     //CALLS FOR TRANSFER OF ACCOUNT A AND B WITH AMOUNTS  AT THE SAME TIME FOR DEADLOCK
-    Thread t2 = new Thread(() => accountB.TransferDeadlock(accountA, amountB));
-
-    t1.Start();
-    t2.Start();
-
-    Console.WriteLine("Waiting...");
-
-    t1.Join();
-    t2.Join();
-}
-
-public static void mutexLockerDetection(BankAccount accountA, BankAccount accountB, int amountA, int amountB)   //CALLS FOR ACCOUNT DEADLOCK DETECTION METHOD IN BANK ACCOUNT CLASS
-{
-    Thread t1 = new Thread(() => accountA.TransferDeadlockDetection(accountB, amountA));        //STARTS THREADS SIMULTANEOUSLY
-    Thread t2 = new Thread(() => accountB.TransferDeadlockDetection(accountA, amountB));
-
-    t1.Start();
-    t2.Start();
-
-    Console.WriteLine("Waiting...");
-
-    t1.Join();
-    t2.Join();
-
-    Console.WriteLine("Account A Balance " + accountA.getBalance());        //PRINTS BALANCES
-    Console.WriteLine("Account B Balance " + accountB.getBalance());
-
-}
-
-public static void transferOrdering(BankAccount accountA, BankAccount accountB, int amountA, int amountB)   //CALLS TRANSFER ORDERING METHOD IN BANK ACCOUNT CLASS
-{
-    Thread t1 = new Thread(() => accountA.TransferOrdering(accountB, amountA));     //STARTS THREADS SIMULTANEOUSLY
-    Thread t2 = new Thread(() => accountB.TransferOrdering(accountA, amountB));
-
-    t1.Start();
-    t2.Start();
-
-    Console.WriteLine("Waiting...");
-
-    t1.Join();
-    t2.Join();
-
-    Console.WriteLine("Account A Balance " + accountA.getBalance());        //PRINTS BALANCES
-    Console.WriteLine("Account B Balance " + accountB.getBalance());
-}
-
-    public static void TransferWithOrderingAndDetection(BankAccount accountA, BankAccount accountB, int amountA, int amountB){      //CALLS FOR TRANSFER AND ORDER DETECTING METHOD IN BANK ACCOUNT CLASS
-
-        Thread t1 = new Thread(() => accountA.TransferWithOrderingAndDetection(accountB, amountA));     //STARTS THREADS SIMULTANEOUSLY
-        Thread t2 = new Thread(() => accountB.TransferWithOrderingAndDetection(accountA, amountB));
+        /*
+            SECTION FOR CALING METHODS WITH THREADS
+        */
+        Thread t1 = new Thread(() => account1.Deposit(500));        
+        Thread t2 = new Thread(() => account1.Withdraw(200));
+        Thread t3 = new Thread(() => account1.TransferWithOrderingAndDetection(account2, 200));
+        Thread t4 = new Thread(() => account1.Deposit(100));
+        Thread t5 = new Thread(() => account1.Withdraw(150));
+        Thread t6 = new Thread(() => account1.TransferWithOrderingAndDetection(account2, 200));
+        Thread t7 = new Thread(() => account2.Deposit(400));
+        Thread t8 = new Thread(() => account2.Withdraw(100));
+        Thread t9 = new Thread(() => account1.TransferWithOrderingAndDetection(account2, 200));
+        Thread t10 = new Thread(() => account1.TransferWithOrderingAndDetection(account2, 200));
 
         t1.Start();
         t2.Start();
-    
-        Console.WriteLine("Waiting...");
+        t3.Start();
+        t4.Start();
+        t5.Start();
+        t6.Start();
+        t7.Start();
+        t8.Start();
+        t9.Start();
+        t10.Start();
 
         t1.Join();
         t2.Join();
-    
-        Console.WriteLine("Account A Balance " + accountA.getBalance());        //PRINTS BALANCES
-        Console.WriteLine("Account B Balance " + accountB.getBalance());
+        t3.Join();
+        t4.Join();
+        t5.Join();
+        t6.Join();
+        t7.Join();
+        t8.Join();
+        t9.Join();
+        t10.Join();
+
+
+        /*
+            THIS SECTION IS TO DISPLAY TRANSFER DEADLOCK... DEMO ONLY
+        */
+
+        /*
+        Thread t11 = new Thread(() => account1.TransferDeadlock(account2, 100));
+        Thread t12 = new Thread(() => account2.TransferDeadlock(account1, 100));
+        t11.Start();
+        t12.Start();
+        t11.Join();
+        t12.Join();
+        */
+
+
+        /*
+            THIS SECTION IS TO DISPLAY TRANSFER DEADLOCK DETECTION... DEMO ONLY
+        */
+
+        /*
+        Thread t13 = new Thread(() => account1.TransferDeadlockDetection(account2, 100));
+        Thread t14 = new Thread(() => account2.TransferDeadlockDetection(account1, 500));
+        t13.Start();
+        t14.Start();
+        t13.Join();
+        t14.Join();
+        */
+
+
+        Console.WriteLine($"Final Account 1 Balance: {account1.GetBalance()}");
+        Console.WriteLine($"Final Account 2 Balance: {account2.GetBalance()}");
     }
 }
 
+}
 
